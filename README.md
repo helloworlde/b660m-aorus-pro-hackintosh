@@ -1,59 +1,72 @@
-# Gigabyte Aorus Pro DDR4 Hackintosh
+# 技嘉 B660M AORUS PRO AX 安装黑苹果
 
-![ss](./ss/screenshot.png)
+![ventura-info](./picture/ventura-info.png)
 
-* macOS:
-  - Ventura 13.0 ✅
-* Bootloader: OpenCore
-* Note: If you are installing macOS Monterey and older, please disable `AppleIntelI210Ethernet.kext` in the config.plist. That kext is only need for macOS Ventura.
+- 系统配置
 
-## System Overview
-
-| Type | Item |
+| 类型 | 明细 |
 | ---- | ---- |
-| Motherboard | B660M Gigabyte Aorus Pro DDR4 |
-| CPU | Intel Core i7-12700F @ 2.10 GHz, 25M Cache, up to 4.90 GHz
-| RAM | 4 x Corsair Vengeance LPX 8GB 3200MHz DDR4 CMK16GX4M2E3200C |
-| GPU | Biostar RX 6600 8GB |
-| SSD1 | Western Digital SN850 500GB NVMe Gen4x4 Solid State Drive |
-| SSD2 | Lexar 256GB SATA Solid State Drive |
-| SSD3 | KingSpec 480GB SATA Solid State Drive |
-| Sound | Realtek ALC897 |
-| Wireless, Bluetooth | Apple BCM94360CD Wireless Card |
-| LAN | Intel Ethernet I-225V |
-| BIOS Version | F20 |
+| 主板 | 技嘉 B660M AORUS PRO AX DDR4 |
+| CPU | 12th Gen Intel(R) Core(TM) i9-12900K|
+| 内存 | 2 x Kingston 16GB 3200MHz DDR4 |
+| 显卡 | 憾讯 AMD RX 6600 8GB |
+| 硬盘 | Lexar 512G Nvme SSD |
+| 声卡 | Realtek ALC897 |
+| 无线/蓝牙| Apple BCM94360CD Wireless Card |
+| 有线网口 | Intel Ethernet I-225V |
+| BIOS 版本 | F21 |
 
-![CPU](./ss/cpubench.png)
-![GPUMetal](./ss/gpubench_metal.png)
-![GPUOpenCL](./ss/gpubench_opencl.png)
+## 1. 刻录 macOS 镜像
 
-## Current Status
+### 1.1 从 App Store 下载 Ventura 
 
-| Feature | Status |
-| ------------- | ------------- |
-| CPU Power Management | ✅ Working |
-| Sleep/Wake | ✅ Working |
-| AMD RX6600 Graphics Acceleration | ✅ Working |
-| Wi-Fi/Bluetooth | ✅ Working |
-| Ethernet | ✅ Working |
-| Audio | ✅ Working |
-| Speakers and Headphones | ✅ Working |
-| iMessage/Facetime and App Store | ✅ Working  |
-| Airdrop/Handoff | ✅ Working |
-| FileVault 2 | ✅ Working |
-| DRM | ✅ Working |
-| BootCamp | ✅ Working |
+在 App Store 或[在线的 App Store](https://www.apple.com/us/search/macOS?src=serp) 搜索 Ventura 并安装
 
-## BIOS Configuration
+![Download Ventura](./picture/download-ventura.png)
 
-### Tweaker:
+### 1.2 格式化并分区移动磁盘
+
+使用磁盘工具格式化磁盘，选择抹掉，格式选择 "Mac OS 扩展（日志式）"；方案选择 GUID 分区图；这样就会将移动磁盘分为两个分区，一个是 EFI分区，另一个是系统镜像分区
+![homelab-nuc-hackintosh-format-disk.png](https://hellowoodes.oss-cn-beijing.aliyuncs.com/picture/homelab-nuc-hackintosh-format-disk.png)
+
+### 1.3 将 macOS 刻录到移动磁盘
+
+下载完 macOS 安装器后，即可通过安装器将镜像刻录到移动磁盘；在命令行执行以下命令，Volume 即为刚才分区时命名的分区名称
+
+```bash
+sudo /Applications/Install\ macOS\ Ventura.app/Contents/Resources/createinstallmedia --volume /Volumes/macOS
+```
+
+等待执行完成即可
+
+### 1.4 配置 EFI 
+
+EFI 基于 [https://github.com/taruyato/b660m-aorus-pro-hackintosh](https://github.com/taruyato/b660m-aorus-pro-hackintosh) 修改而来；添加了 CPU，序列号等信息
+
+首先将 EFI 分区挂载到电脑上；可以使用 `diskutil list` 命令查看 EFI 的 ID，然后使用命令行将 EFI 分区挂载
+
+```bash
+sudo mkdir /Volumes/efi
+sudo mount -t msdos /dev/disk2s1 /Volumes/efi
+```
+
+## 2 安装 macOS
+
+### 2.1 修改 BIOS 配置
+
+建议先将 BIOS 升级到最新版本；进入配置后选择将所有的配置恢复到默认之后再配置，避免因为其他配置被改动导致出现问题
+
+##### Tweaker:
+
 * Advanced CPU Settings:
   - Hyper-Threading Technology: Enabled
   - Intel Turbo Boost Technology: Enabled
   - Legacy Game Compatibility Mode: Disabled
   - AVX: Enabled
 * Extreme Memory Profile: Profile1
-### Settings:
+
+##### Settings:
+
 * IO Ports:
   - Above 4G Decoding: Enabled
   - Re-Size BAR Support: Enabled (if you have RX 6000 Series)
@@ -64,55 +77,21 @@
   - Intel Platform Trust Technology: Disabled
   - VT-d: Disabled
   - Trusted Computing > Security Device Support: Disable
-### Boot: 
+
+##### Boot: 
+
 - CFG Lock: Disabled
 - Fast Boot: Disable Link
 - Windows 10 Features: Other OS
 - CSM Support: Disabled
 
-## config.plist
-- There are 2 types of config.plist file. Based on what GPU are using, please grab the correct config.plist file. Also remember to rename it back to `config.plist`.
-- In config.plist file for RX 6000 series GPU, I added the patch for disabling the ZeroRPM and make the temperature is lower than normal when idle. If you want to enable the patch, you can remove the `#` character before the PCI path in `DeviceProperties > Devices`. For more information you can check the tutorial from perez987 [here](https://github.com/perez987/6600XT-on-macOS-12-13-with-PowerPlayTable). He did amazing job about the guide.
+修改启动项，关闭其他启动项
+将核心显卡改为自动
 
-## USB Mapping
+关闭安全启动
 
-![USB](./ss/usb.png)
+### 2.2 安装 macOS 
 
-| Port | Connector | Visible | Description |
-|------|----------|---------|-------------|
-| 01 | Type C | Yes     | C Port on mobo|
-| 05 | Internal | Yes     | USB 2.0 Hub on mobo, currently include my BCM94360CD card |
-| 06 | Internal | Yes     | USB 2.0 Hub, should be internal |
-| 09 | Type 0 | Yes     | 4-Port USB 2.0 Hub |
-| 0A | Type 0 | Yes     | 4-Port USB 2.0 Hub |
-| 0B | Internal | Yes     | ITE Device |
-| 0E | Internal | Yes     | Intel Wireless Card, only available on AX mobo |
-| 11 | Type C | Yes     | |
-| 18 | Type 3 | Yes     | 2-Port USB 3.0 Hub |
-| 19 | Type 3 | Yes     | 2-Port USB 3.0 Hub |
+按照指引安装 macOS 即可，中途会重启多次；如果出现重启后找不到启动项，可以将移动硬盘拔掉重新插入再重启
 
-## CPU Power Management
-
-* CPU power management is done by `CPUFriend.kext` while `CPUFriendDataProvider.kext` defines how it should be done. `CPUFriendDataProvider.kext` is generated for a specific CPU and power setting. The one supplied in this repository is very universal for Alder Lake CPU.
-
-## iService
-
-* To use iMessage and other Apple services, you need to generate your own serial numbers. This can be done using [CorpNewt's GenSMBIOS](https://github.com/corpnewt/GenSMBIOS). Make sure model is `iMacPro1,1`. Then, go [Apple Check Coverage page](https://checkcoverage.apple.com/) to check your generated serial numbers. If the website tells you that the serial number **is not valid**, that is fine. Otherwise, you have to generate a new set.
-
-* Next you will have to copy the following values to your `config.plist`:
-  - Serial Number -> `PlatformInfo/Generic/SystemSerialNumber`.
-  - Board Number -> `PlatformInfo/Generic/MLB`.
-  - SmUUID -> `/PlatformInfo/Generic/SystemUUID`.
-  Reboot and Apple services should work.
-
-* If they don't, follow [this in-depth guide](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html). It goes deeper into ROM, clearing NVRAM, clearing Keychain (missing this step might cause major issues), and much more.
-
-## Credit
-* Apple for macOS.
-* Acidanthera Team for OpenCore Bootloader and many Kernel Extensions.
-* MaLd0n and Olarila Team for hints for Alder Lake patches and config.
-* b00t0x for his amazing job with CpuTopologyRebuild.
-
-## Support
-* Support me: 
-  - [Paypal](https://www.paypal.me/tekun0lxrd)
+等待安装完成，即可进入 macOS 配置，按照指引配置即可
