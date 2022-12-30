@@ -135,7 +135,7 @@ sudo mount -t msdos /dev/disk2s1 /Volumes/efi
 | 频率/电压控制   | 进阶处理器设置           | Hyper-Threading 技术            | 启动     |      |
 |               |                        | Intel 涡轮加速技术               | 启动     |      |
 |               |                        | Legacy Game Compatibility Mode | 关闭     |      |
-|               |                        | AVX: Enabled                   | 启动     |      |
+|               |                        | AVX		                   | 启动     |      |
 |               | Extreme Memory Profile |                                | Profile1 |      |
 | 设置           | IO Ports               | Internal Graphics              | 自动     | CPU有核显时配置  |
 |               |                        | 4G以上解码                       | 启动     |      |
